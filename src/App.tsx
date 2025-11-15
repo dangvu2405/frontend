@@ -85,9 +85,30 @@ function App() {
                   <Route path="accounts" element={<AdminAccountsPage />} />
                   <Route path="supply-chain" element={<AdminSupplyChainPage />} />
                   <Route path="chat" element={<AdminChatPage />} />
-              <Route path="settings" element={<AdminSettingsPage />} />
+                  <Route path="settings" element={<AdminSettingsPage />} />
                 </Route>
               </Route>
+              
+              {/* 404 - Catch all unmatched routes */}
+              <Route path="*" element={
+                <div className="min-h-screen flex items-center justify-center bg-background p-4">
+                  <div className="text-center">
+                    <h1 className="text-6xl font-bold text-foreground mb-4">404</h1>
+                    <h2 className="text-2xl font-semibold text-foreground mb-4">
+                      Trang không tìm thấy
+                    </h2>
+                    <p className="text-muted-foreground mb-6">
+                      Trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.
+                    </p>
+                    <button
+                      onClick={() => window.location.href = '/'}
+                      className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
+                    >
+                      Về trang chủ
+                    </button>
+                  </div>
+                </div>
+              } />
             </Routes>
           </Suspense>
         </BrowserRouter>
