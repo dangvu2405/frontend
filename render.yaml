@@ -11,7 +11,6 @@ services:
       - key: VITE_API_URL
         value: https://api.dtv2405.id.vn
       # Fallback URL từ Render - Tự động dùng khi custom domain không hoạt động
-      # Thay 'backend-api' bằng tên service backend thực tế của bạn trên Render
       - key: VITE_RENDER_API_URL
-        value: https://backend-api.onrender.com
+        value: https://backend-ks46.onrender.com
 
