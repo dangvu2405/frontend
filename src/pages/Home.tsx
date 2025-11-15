@@ -59,86 +59,80 @@ export default function HomePage() {
     let isMounted = true; // Flag để track component mounted
     const frame = requestAnimationFrame(() => setCanPlayHero(true));
 
-    const fetchProducts = async () => {
-      try {
-        // Use requestIdleCallback if available for non-critical data fetching
-        const fetchData = (result: { products: Product[]; pagination?: any }) => {
-          // Chỉ update state nếu component vẫn còn mounted
-          if (isMounted) {
-            const products = result.products || [];
-            
-            // Validate và normalize dữ liệu
-            const validProducts = products.map((product, index) => {
-            const p = product as any; // Cast để tránh lỗi TypeScript
-            // Tính % giảm giá
-            let discountPercent = 0;
-            if (p.KhuyenMai > 0) {
-              // Nếu có field KhuyenMai (%) → dùng luôn
-              discountPercent = Number(p.KhuyenMai);
-            } else if (p.GiaKhuyenMai && p.Gia && p.GiaKhuyenMai < p.Gia) {
-              // Nếu có GiaKhuyenMai (giá sau giảm) → tính %
-              discountPercent = Math.round(((p.Gia - p.GiaKhuyenMai) / p.Gia) * 100);
-            }
-            return {
-              // ID từ MongoDB _id
-              id: p._id || p.id || `product-${index}`,
-              
-              // Tên sản phẩm
-              tenSP: p.TenSanPham || 'Sản phẩm',
-              
-              // Mô tả
-              mota: p.MoTa || 'Sản phẩm chính hãng cao cấp',
-              
-              // Giá gốc
-              gia: Number(p.Gia || 0),
-              
-              // % Khuyến mãi
-              giamGia: discountPercent,
-              
-              // Số lượng tồn
-              soLuong: Number(p.SoLuong || 0),
-              
-              // Đã bán
-              daBan: Number(p.DaBan || 0),
-              
-              // Hình ảnh chính
-              hinhAnhChinh: p.HinhAnhChinh 
-                ? (p.HinhAnhChinh.startsWith('http') ? p.HinhAnhChinh : `/${p.HinhAnhChinh}`)
-                : 'https://placehold.co/300x300/E5E5EA/000?text=No+Image',
-              
-              // Hình ảnh phụ
-              hinhAnhPhu: Array.isArray(p.HinhAnhPhu) 
-                ? p.HinhAnhPhu.map((img: string) => 
-                    img.startsWith('http') ? img : `/${img}`
-                  )
-                : [],
-              
-              // Deprecated: giữ lại để tương thích
-              hinhAnh: p.HinhAnhChinh 
-                ? (p.HinhAnhChinh.startsWith('http') ? p.HinhAnhChinh : `/${p.HinhAnhChinh}`)
-                : 'https://placehold.co/300x300/E5E5EA/000?text=No+Image',
-              
-              // Loại sản phẩm
-              loaiSP: p.MaLoaiSanPham?.TenLoaiSanPham || 'Nước hoa',
-            } as Product;
-          });
-          
-            // Lấy 8 sản phẩm đầu tiên để hiển thị
-            setFeaturedProducts(validProducts.slice(0, 8));
-            setLoading(false);
+    // Fetch products - non-blocking
+    productsService.getAllProducts({ limit: 8 })
+      .then((result) => {
+        if (!isMounted) return;
+        
+        const products = result.products || [];
+        
+        // Validate và normalize dữ liệu
+        const validProducts = products.map((product, index) => {
+          const p = product as any; // Cast để tránh lỗi TypeScript
+          // Tính % giảm giá
+          let discountPercent = 0;
+          if (p.KhuyenMai > 0) {
+            // Nếu có field KhuyenMai (%) → dùng luôn
+            discountPercent = Number(p.KhuyenMai);
+          } else if (p.GiaKhuyenMai && p.Gia && p.GiaKhuyenMai < p.Gia) {
+            // Nếu có GiaKhuyenMai (giá sau giảm) → tính %
+            discountPercent = Math.round(((p.Gia - p.GiaKhuyenMai) / p.Gia) * 100);
           }
-        };
-
-        // Fetch immediately but don't block rendering
-        productsService.getAllProducts({ limit: 8 })
-          .then(fetchData)
-          .catch((error) => {
-            if (isMounted) {
-              console.error('Error fetching products:', error);
-              toast.error('Không thể tải sản phẩm');
-              setLoading(false);
-            }
-          });
+          return {
+            // ID từ MongoDB _id
+            id: p._id || p.id || `product-${index}`,
+            
+            // Tên sản phẩm
+            tenSP: p.TenSanPham || 'Sản phẩm',
+            
+            // Mô tả
+            mota: p.MoTa || 'Sản phẩm chính hãng cao cấp',
+            
+            // Giá gốc
+            gia: Number(p.Gia || 0),
+            
+            // % Khuyến mãi
+            giamGia: discountPercent,
+            
+            // Số lượng tồn
+            soLuong: Number(p.SoLuong || 0),
+            
+            // Đã bán
+            daBan: Number(p.DaBan || 0),
+            
+            // Hình ảnh chính
+            hinhAnhChinh: p.HinhAnhChinh 
+              ? (p.HinhAnhChinh.startsWith('http') ? p.HinhAnhChinh : `/${p.HinhAnhChinh}`)
+              : 'https://placehold.co/300x300/E5E5EA/000?text=No+Image',
+            
+            // Hình ảnh phụ
+            hinhAnhPhu: Array.isArray(p.HinhAnhPhu) 
+              ? p.HinhAnhPhu.map((img: string) => 
+                  img.startsWith('http') ? img : `/${img}`
+                )
+              : [],
+            
+            // Deprecated: giữ lại để tương thích
+            hinhAnh: p.HinhAnhChinh 
+              ? (p.HinhAnhChinh.startsWith('http') ? p.HinhAnhChinh : `/${p.HinhAnhChinh}`)
+              : 'https://placehold.co/300x300/E5E5EA/000?text=No+Image',
+            
+            // Loại sản phẩm
+            loaiSP: p.MaLoaiSanPham?.TenLoaiSanPham || 'Nước hoa',
+          } as Product;
+        });
+        
+        // Lấy 8 sản phẩm đầu tiên để hiển thị
+        setFeaturedProducts(validProducts.slice(0, 8));
+        setLoading(false);
+      })
+      .catch((error) => {
+        if (isMounted) {
+          console.error('Error fetching products:', error);
+          toast.error('Không thể tải sản phẩm');
+          setLoading(false);
+        }
+      });
 
     // Cleanup function
     return () => {
