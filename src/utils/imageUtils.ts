@@ -1,19 +1,17 @@
 /**
  * Image utility functions for handling image URLs
- * Supports both local images and CDN/external image hosting
+ * Supports both local images and Cloudinary CDN
  */
 
-// CDN Base URL - Set this to your image hosting service
-// Examples:
-// - Cloudinary: https://res.cloudinary.com/your-cloud-name/image/upload
-// - ImgBB: https://i.ibb.co
-// - AWS S3: https://your-bucket.s3.amazonaws.com
-// - Or leave empty to use local images
-const CDN_BASE_URL = import.meta.env.VITE_CDN_BASE_URL || '';
+// Cloudinary Configuration
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '';
+const CLOUDINARY_BASE_URL = CLOUDINARY_CLOUD_NAME 
+  ? `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload`
+  : '';
 
 /**
- * Get optimized image URL
- * If CDN is configured, returns CDN URL with optimization params
+ * Get optimized image URL using Cloudinary
+ * If Cloudinary is configured, returns Cloudinary URL with optimization params
  * Otherwise returns local path
  */
 export const getImageUrl = (
@@ -23,6 +21,7 @@ export const getImageUrl = (
     height?: number;
     quality?: number;
     format?: 'auto' | 'webp' | 'jpg' | 'png';
+    crop?: 'fill' | 'fit' | 'scale' | 'thumb';
   }
 ): string => {
   if (!imagePath) {
@@ -31,31 +30,77 @@ export const getImageUrl = (
 
   // If already a full URL (http/https), return as is
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    // If it's already a Cloudinary URL, apply transformations if needed
+    if (imagePath.includes('cloudinary.com') && options) {
+      return applyCloudinaryTransformations(imagePath, options);
+    }
     return imagePath;
   }
 
-  // If CDN is configured, use CDN with optimization
-  if (CDN_BASE_URL) {
-    const params: string[] = [];
+  // If Cloudinary is configured, use Cloudinary with optimization
+  if (CLOUDINARY_BASE_URL) {
+    const transformations: string[] = [];
     
-    if (options?.width) params.push(`w_${options.width}`);
-    if (options?.height) params.push(`h_${options.height}`);
-    if (options?.quality) params.push(`q_${options.quality}`);
-    if (options?.format) params.push(`f_${options.format}`);
+    // Crop mode (default: fill for product images)
+    const crop = options?.crop || 'fill';
+    transformations.push(crop);
+    
+    if (options?.width) transformations.push(`w_${options.width}`);
+    if (options?.height) transformations.push(`h_${options.height}`);
+    if (options?.quality) transformations.push(`q_${options.quality || 'auto'}`);
+    if (options?.format) {
+      transformations.push(`f_${options.format === 'auto' ? 'auto' : options.format}`);
+    } else {
+      // Auto format for better compression
+      transformations.push('f_auto');
+    }
     
     // Remove leading slash from imagePath if present
     const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
     
-    // Build CDN URL
-    const cdnUrl = `${CDN_BASE_URL}/${cleanPath}`;
-    const paramString = params.length > 0 ? `/${params.join(',')}` : '';
-    
-    return `${cdnUrl}${paramString}`;
+    // Build Cloudinary URL: base_url/transformations/image_path
+    const transformString = transformations.join(',');
+    return `${CLOUDINARY_BASE_URL}/${transformString}/${cleanPath}`;
   }
 
   // Local image - ensure leading slash
   return imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
 };
+
+/**
+ * Apply transformations to existing Cloudinary URL
+ */
+function applyCloudinaryTransformations(
+  url: string,
+  options: {
+    width?: number;
+    height?: number;
+    quality?: number;
+    format?: 'auto' | 'webp' | 'jpg' | 'png';
+    crop?: 'fill' | 'fit' | 'scale' | 'thumb';
+  }
+): string {
+  // Extract the path after /upload/
+  const uploadIndex = url.indexOf('/upload/');
+  if (uploadIndex === -1) return url;
+  
+  const baseUrl = url.substring(0, uploadIndex + 8); // Include '/upload/'
+  const imagePath = url.substring(uploadIndex + 8);
+  
+  const transformations: string[] = [];
+  const crop = options.crop || 'fill';
+  transformations.push(crop);
+  
+  if (options.width) transformations.push(`w_${options.width}`);
+  if (options.height) transformations.push(`h_${options.height}`);
+  if (options.quality) transformations.push(`q_${options.quality || 'auto'}`);
+  if (options.format) {
+    transformations.push(`f_${options.format === 'auto' ? 'auto' : options.format}`);
+  }
+  
+  const transformString = transformations.join(',');
+  return `${baseUrl}${transformString}/${imagePath}`;
+}
 
 /**
  * Get responsive image srcset for different screen sizes
@@ -83,6 +128,7 @@ export const getThumbnailUrl = (imagePath: string | undefined | null): string =>
     height: 300,
     quality: 75,
     format: 'auto',
+    crop: 'fill',
   });
 };
 
@@ -95,6 +141,7 @@ export const getProductImageUrl = (imagePath: string | undefined | null): string
     height: 600,
     quality: 85,
     format: 'auto',
+    crop: 'fill',
   });
 };
 
@@ -107,6 +154,7 @@ export const getDetailImageUrl = (imagePath: string | undefined | null): string 
     height: 1200,
     quality: 90,
     format: 'auto',
+    crop: 'fit', // Fit to maintain aspect ratio for detail images
   });
 };
 
