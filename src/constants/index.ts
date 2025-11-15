@@ -9,8 +9,6 @@ const getApiBaseUrl = () => {
   
   // Nếu có VITE_API_URL, dùng nó (có thể là custom domain hoặc Render URL)
   if (viteApiUrl) {
-    // Kiểm tra xem có phải custom domain không (chứa .id.vn)
-    // Nếu là custom domain và có Render URL fallback, có thể dùng fallback nếu cần
     return viteApiUrl;
   }
   
@@ -23,9 +21,24 @@ const getApiBaseUrl = () => {
 
 export const API_BASE_URL = getApiBaseUrl();
 
+// Fallback URL - Dùng khi primary URL không hoạt động
+// Nếu VITE_API_URL là custom domain (.id.vn) và có VITE_RENDER_API_URL, dùng Render URL làm fallback
+export const FALLBACK_API_URL = (() => {
+  const viteApiUrl = import.meta.env.VITE_API_URL;
+  const renderUrl = import.meta.env.VITE_RENDER_API_URL;
+  
+  // Nếu primary URL là custom domain và có Render URL, dùng Render URL làm fallback
+  if (viteApiUrl && viteApiUrl.includes('.id.vn') && renderUrl) {
+    return renderUrl;
+  }
+  
+  return null;
+})();
+
 // Kiểm tra xem API URL có đúng không
 console.log('🔗 API Base URL:', API_BASE_URL);
 console.log('🔗 VITE_API_URL env:', import.meta.env.VITE_API_URL);
+console.log('🔗 Fallback API URL:', FALLBACK_API_URL || 'Not configured');
 console.log('🔗 NODE_ENV:', import.meta.env.MODE);
 
 // API Endpoints
