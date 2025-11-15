@@ -134,7 +134,7 @@ export default function AdminAccountsPage() {
           console.warn('rolesData is not an array:', rolesData)
           setRoles([])
         } else {
-          setRoles(rolesData)
+        setRoles(rolesData)
         }
       } catch (err) {
         rolesFetchedRef.current = false
@@ -352,7 +352,7 @@ export default function AdminAccountsPage() {
       toast.error("Họ tên là bắt buộc")
       return
     }
-    
+
     if (formData.hoten.trim().length < 2 || formData.hoten.trim().length > 100) {
       toast.error("Họ tên phải từ 2 đến 100 ký tự")
       return
@@ -565,10 +565,10 @@ export default function AdminAccountsPage() {
               </>
             )}
           </Button>
-          <Button onClick={openCreateDialog}>
-            <Plus className="mr-2 h-4 w-4" />
-            Thêm tài khoản
-          </Button>
+        <Button onClick={openCreateDialog}>
+          <Plus className="mr-2 h-4 w-4" />
+          Thêm tài khoản
+        </Button>
         </div>
       </div>
 

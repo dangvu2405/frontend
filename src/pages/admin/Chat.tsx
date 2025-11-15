@@ -385,57 +385,57 @@ export default function AdminChatPage() {
                       </Button>
                     </div>
                     <div onClick={() => handleSelectRoom(room)}>
-                      <div className="flex items-start gap-3">
-                        <div className="relative">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={room.CustomerId.AvatarUrl} />
-                            <AvatarFallback className="bg-primary/20 text-primary font-semibold">
-                              {room.CustomerId.HoTen.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          {room.Status === 'active' && (
-                            <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background"></div>
-                          )}
+                    <div className="flex items-start gap-3">
+                      <div className="relative">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={room.CustomerId.AvatarUrl} />
+                          <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+                            {room.CustomerId.HoTen.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        {room.Status === 'active' && (
+                          <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background"></div>
+                        )}
                           {/* Chấm đỏ khi có tin nhắn mới */}
                           {hasUnread && !isSelected && (
                             <div className="absolute top-0 right-0 h-4 w-4 rounded-full bg-red-500 border-2 border-background animate-pulse"></div>
                           )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className={cn(
+                            'font-semibold text-sm truncate',
+                            hasUnread && !isSelected && 'font-bold'
+                          )}>
+                            {room.CustomerId.HoTen}
+                          </p>
+                          {room.LastMessageAt && (
+                            <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                              {formatConversationTime(room.LastMessageAt)}
+                            </span>
+                          )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center justify-between gap-2">
+                          {room.LastMessage ? (
                             <p className={cn(
-                              'font-semibold text-sm truncate',
-                              hasUnread && !isSelected && 'font-bold'
+                              'text-sm truncate flex-1',
+                              hasUnread && !isSelected 
+                                ? 'text-foreground font-medium' 
+                                : 'text-muted-foreground'
                             )}>
-                              {room.CustomerId.HoTen}
+                              {room.LastMessage}
                             </p>
-                            {room.LastMessageAt && (
-                              <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-                                {formatConversationTime(room.LastMessageAt)}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center justify-between gap-2">
-                            {room.LastMessage ? (
-                              <p className={cn(
-                                'text-sm truncate flex-1',
-                                hasUnread && !isSelected 
-                                  ? 'text-foreground font-medium' 
-                                  : 'text-muted-foreground'
-                              )}>
-                                {room.LastMessage}
-                              </p>
-                            ) : (
-                              <p className="text-sm text-muted-foreground italic">Chưa có tin nhắn</p>
-                            )}
-                            {hasUnread && (
-                              <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground flex-shrink-0">
-                                {room.UnreadCount.admin > 9 ? '9+' : room.UnreadCount.admin}
-                              </div>
-                            )}
-                          </div>
-                          <div className="mt-1">
-                            {getStatusBadge(room.Status)}
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">Chưa có tin nhắn</p>
+                          )}
+                          {hasUnread && (
+                            <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground flex-shrink-0">
+                              {room.UnreadCount.admin > 9 ? '9+' : room.UnreadCount.admin}
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-1">
+                          {getStatusBadge(room.Status)}
                           </div>
                         </div>
                       </div>
@@ -496,14 +496,14 @@ export default function AdminChatPage() {
                 {getStatusBadge(selectedRoom.Status)}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9"
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9"
                       onClick={(e) => e.stopPropagation()}
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {selectedRoom.Status !== 'closed' && (

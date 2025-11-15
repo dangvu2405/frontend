@@ -82,9 +82,9 @@ function App() {
                   <Route path="orders" element={<AdminOrdersPage />} />
                   <Route path="products" element={<AdminProductsPage />} />
                   <Route path="customers" element={<AdminCustomersPage />} />
-              <Route path="accounts" element={<AdminAccountsPage />} />
-              <Route path="supply-chain" element={<AdminSupplyChainPage />} />
-              <Route path="chat" element={<AdminChatPage />} />
+                  <Route path="accounts" element={<AdminAccountsPage />} />
+                  <Route path="supply-chain" element={<AdminSupplyChainPage />} />
+                  <Route path="chat" element={<AdminChatPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
                 </Route>
               </Route>
