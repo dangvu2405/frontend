@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { ShoppingCart, User, LogOut, Menu } from 'lucide-react';
+import { ShoppingCart, LogOut, Menu } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ThemeToggle } from './ThemeToggle';
 import { storage } from '@/utils/storage';
