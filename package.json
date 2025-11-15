@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:render": "npm ci && npm run build",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "npx serve -s dist -l 10000"
