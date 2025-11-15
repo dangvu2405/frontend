@@ -10,4 +10,12 @@ services:
       # Primary API URL - Render backend service
       - key: VITE_API_URL
         value: https://backend-ks46.onrender.com
+      # CDN Base URL for images (optional)
+      # Examples:
+      # - Cloudinary: https://res.cloudinary.com/your-cloud-name/image/upload
+      # - ImgBB: https://i.ibb.co
+      # - AWS S3: https://your-bucket.s3.amazonaws.com
+      # Leave empty to use local images
+      # - key: VITE_CDN_BASE_URL
+      #   value: 
 

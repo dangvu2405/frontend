@@ -24,6 +24,8 @@ type ProductsGridProps = {
   showPagination?: boolean
 }
 
+import { getProductImageUrl } from "@/utils/imageUtils";
+
 const FALLBACK_IMAGE =
   "https://placehold.co/300x300/E5E5EA/000?text=No+Image"
 
@@ -58,7 +60,7 @@ const ProductCard = memo(({
       <CardContent className="p-0">
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img
-            src={product.hinhAnhChinh || product.hinhAnh || FALLBACK_IMAGE}
+            src={getProductImageUrl(product.hinhAnhChinh || product.hinhAnh) || FALLBACK_IMAGE}
             alt={product.tenSP}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
