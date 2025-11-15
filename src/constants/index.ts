@@ -1,9 +1,18 @@
 // API Base URL - Lấy từ biến môi trường hoặc dùng mặc định
 // Nếu VITE_API_URL là empty string, dùng relative URL (cho Docker với nginx proxy)
 // Nếu không có, dùng localhost:3001 (cho development)
-export const API_BASE_URL = import.meta.env.VITE_API_URL === '' 
-  ? '' 
-  : (import.meta.env.VITE_API_URL || 'http://localhost:3001');
+// Fallback: Nếu domain không resolve được, có thể dùng RENDER_URL từ env
+const getApiBaseUrl = () => {
+  const viteApiUrl = import.meta.env.VITE_API_URL;
+  const renderUrl = import.meta.env.VITE_RENDER_API_URL; // Fallback URL từ Render
+  
+  if (viteApiUrl === '') return '';
+  if (viteApiUrl) return viteApiUrl;
+  if (renderUrl) return renderUrl;
+  return 'http://localhost:3001';
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 // Kiểm tra xem API URL có đúng không
 console.log('🔗 API Base URL:', API_BASE_URL);

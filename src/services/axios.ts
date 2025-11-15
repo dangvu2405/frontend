@@ -12,6 +12,12 @@ const axiosInstance = axios.create({
   },
 });
 
+// Log API configuration for debugging
+if (typeof window !== 'undefined') {
+  console.log('🌐 Axios Base URL:', axiosInstance.defaults.baseURL);
+  console.log('🌐 Full API URL example:', `${axiosInstance.defaults.baseURL}/api/products`);
+}
+
 // Request interceptor - Thêm token vào header
 axiosInstance.interceptors.request.use(
   (config) => {
