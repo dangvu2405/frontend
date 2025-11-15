@@ -158,3 +158,57 @@ export const getDetailImageUrl = (imagePath: string | undefined | null): string 
   });
 };
 
+/**
+ * Get Cloudinary video URL
+ * @param videoPath - Video public ID or path (e.g., "videos/backgroud" or "videos/backgroud.mp4")
+ * @param options - Video transformation options
+ * @returns Cloudinary video URL
+ */
+export const getVideoUrl = (
+  videoPath: string | undefined | null,
+  options?: {
+    width?: number;
+    height?: number;
+    quality?: 'auto' | number;
+    format?: 'auto' | 'mp4' | 'webm';
+  }
+): string => {
+  if (!videoPath) {
+    return '';
+  }
+
+  // If already a full URL (http/https), return as is
+  if (videoPath.startsWith('http://') || videoPath.startsWith('https://')) {
+    return videoPath;
+  }
+
+  // If Cloudinary is configured, use Cloudinary
+  if (CLOUDINARY_CLOUD_NAME) {
+    const transformations: string[] = [];
+    
+    if (options?.width) transformations.push(`w_${options.width}`);
+    if (options?.height) transformations.push(`h_${options.height}`);
+    if (options?.quality) {
+      transformations.push(`q_${options.quality === 'auto' ? 'auto' : options.quality}`);
+    }
+    if (options?.format) {
+      transformations.push(`f_${options.format === 'auto' ? 'auto' : options.format}`);
+    }
+    
+    // Remove leading slash and extension from videoPath
+    let cleanPath = videoPath.startsWith('/') ? videoPath.slice(1) : videoPath;
+    // Remove .mp4 extension if present (Cloudinary handles format automatically)
+    cleanPath = cleanPath.replace(/\.(mp4|webm|mov)$/i, '');
+    
+    // Build Cloudinary video URL
+    const transformString = transformations.length > 0 
+      ? `/${transformations.join(',')}` 
+      : '';
+    
+    return `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/video/upload${transformString}/${cleanPath}`;
+  }
+
+  // Local video - ensure leading slash
+  return videoPath.startsWith('/') ? videoPath : `/${videoPath}`;
+};
+

@@ -6,6 +6,7 @@ import { lazy, Suspense, useState, useEffect, useCallback } from 'react';
 import { productsService, type Product } from '@/services/productsService';
 import { toast } from 'sonner';
 import { storage, type CartItem } from '@/utils/storage';
+import { getVideoUrl } from '@/utils/imageUtils';
 const ProductsGrid = lazy(async () => {
   const module = await import('@/components/products');
   return { default: module.ProductsGrid };
@@ -189,7 +190,7 @@ export default function HomePage() {
                       });
                     }}
                   >
-                    <source src="/backgroud.mp4" type="video/mp4" />
+                    <source src={getVideoUrl('videos/backgroud')} type="video/mp4" />
                   </video>
                 ) : (
                   <div className="w-full h-full bg-muted animate-pulse" />
