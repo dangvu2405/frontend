@@ -17,6 +17,10 @@ export default defineConfig({
   server: {
     port: 5174,
   },
+  esbuild: {
+    // Remove console.log and debugger in production
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+  },
   build: {
     rollupOptions: {
       output: {
@@ -42,9 +46,5 @@ export default defineConfig({
     // Optimize chunk size
     target: 'es2015',
     cssCodeSplit: true,
-    // Remove console.log in production build
-    esbuild: {
-      drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
-    },
   },
 })
