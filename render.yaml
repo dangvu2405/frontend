@@ -2,7 +2,7 @@ services:
   - type: static
     name: frontend-app
     region: singapore
-    buildCommand: npm install --include=dev && npm run build
+    buildCommand: NODE_ENV=development npm install && npm run build
     staticPublishPath: ./dist
     envVars:
       - key: NODE_ENV
