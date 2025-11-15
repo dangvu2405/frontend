@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_BASE_URL, FALLBACK_API_URL } from '@/constants';
+import { API_BASE_URL } from '@/constants';
 import { storage } from '@/utils/storage';
 
 // Create axios instance
@@ -89,48 +89,6 @@ axiosInstance.interceptors.response.use(
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);
-      }
-    }
-
-    // Handle network errors (ERR_NAME_NOT_RESOLVED, ERR_CONNECTION_REFUSED, etc.)
-    // Nếu có fallback URL và chưa retry với fallback, thử lại với fallback URL
-    const isNetworkError = !error.response && (
-      error.message?.includes('Network Error') ||
-      error.message?.includes('ERR_NAME_NOT_RESOLVED') ||
-      error.message?.includes('ERR_CONNECTION_REFUSED') ||
-      error.code === 'ERR_NETWORK' ||
-      error.code === 'ERR_NAME_NOT_RESOLVED'
-    );
-
-    if (isNetworkError && FALLBACK_API_URL && !originalRequest._fallbackRetry) {
-      console.warn('⚠️ Network error detected, retrying with fallback URL:', FALLBACK_API_URL);
-      originalRequest._fallbackRetry = true;
-      
-      // Thay đổi baseURL tạm thời cho request này
-      const fallbackConfig = {
-        ...originalRequest,
-        baseURL: FALLBACK_API_URL,
-        url: originalRequest.url, // Giữ nguyên URL path
-      };
-      
-      // Update axios instance baseURL tạm thời
-      const originalBaseURL = axiosInstance.defaults.baseURL;
-      axiosInstance.defaults.baseURL = FALLBACK_API_URL;
-      
-      try {
-        const response = await axiosInstance(fallbackConfig);
-        // Restore original baseURL
-        axiosInstance.defaults.baseURL = originalBaseURL;
-        return response.data;
-      } catch (fallbackError) {
-        // Restore original baseURL
-        axiosInstance.defaults.baseURL = originalBaseURL;
-        console.error('❌ Fallback URL also failed:', fallbackError);
-        return Promise.reject({
-          message: 'Không thể kết nối đến server. Vui lòng thử lại sau.',
-          status: undefined,
-          data: undefined,
-        });
       }
     }
 

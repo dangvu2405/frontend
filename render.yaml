@@ -7,10 +7,7 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      # Primary API URL (custom domain)
+      # Primary API URL - Render backend service
       - key: VITE_API_URL
-        value: https://api.dtv2405.id.vn
-      # Fallback URL từ Render - Tự động dùng khi custom domain không hoạt động
-      - key: VITE_RENDER_API_URL
         value: https://backend-ks46.onrender.com
 
