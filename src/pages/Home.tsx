@@ -61,14 +61,14 @@ export default function HomePage() {
 
     const fetchProducts = async () => {
       try {
-        const result = await productsService.getAllProducts({ limit: 8 });
-        
-        // Chỉ update state nếu component vẫn còn mounted
-        if (isMounted) {
-          const products = result.products || [];
-          
-          // Validate và normalize dữ liệu
-          const validProducts = products.map((product, index) => {
+        // Use requestIdleCallback if available for non-critical data fetching
+        const fetchData = (result: { products: Product[]; pagination?: any }) => {
+          // Chỉ update state nếu component vẫn còn mounted
+          if (isMounted) {
+            const products = result.products || [];
+            
+            // Validate và normalize dữ liệu
+            const validProducts = products.map((product, index) => {
             const p = product as any; // Cast để tránh lỗi TypeScript
             // Tính % giảm giá
             let discountPercent = 0;
@@ -123,22 +123,22 @@ export default function HomePage() {
             } as Product;
           });
           
-          // Lấy 8 sản phẩm đầu tiên để hiển thị
-          setFeaturedProducts(validProducts.slice(0, 8));
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error('Error fetching products:', error);
-          toast.error('Không thể tải sản phẩm');
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
+            // Lấy 8 sản phẩm đầu tiên để hiển thị
+            setFeaturedProducts(validProducts.slice(0, 8));
+            setLoading(false);
+          }
+        };
 
-    fetchProducts();
+        // Fetch immediately but don't block rendering
+        productsService.getAllProducts({ limit: 8 })
+          .then(fetchData)
+          .catch((error) => {
+            if (isMounted) {
+              console.error('Error fetching products:', error);
+              toast.error('Không thể tải sản phẩm');
+              setLoading(false);
+            }
+          });
 
     // Cleanup function
     return () => {
