@@ -7,6 +7,8 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL === ''
 
 // Kiểm tra xem API URL có đúng không
 console.log('🔗 API Base URL:', API_BASE_URL);
+console.log('🔗 VITE_API_URL env:', import.meta.env.VITE_API_URL);
+console.log('🔗 NODE_ENV:', import.meta.env.MODE);
 
 // API Endpoints
 export const API_ENDPOINTS = {
