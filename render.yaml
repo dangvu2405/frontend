@@ -2,7 +2,7 @@ services:
   - type: static
     name: frontend-app
     region: singapore
-    buildCommand: rm -rf node_modules package-lock.json && npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     staticPublishPath: ./dist
     envVars:
       - key: NODE_ENV
