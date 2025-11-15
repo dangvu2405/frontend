@@ -1,4 +1,5 @@
 import axiosInstance from "./axios";
+import { apiCache } from "@/utils/apiCache";
 
 export interface Product {
   id: string;
@@ -40,11 +41,25 @@ export const productsService = {
   // Lấy tất cả sản phẩm
   getAllProducts: async (params?: { page?: number; limit?: number }): Promise<{ products: Product[]; pagination?: Pagination }> => {
     try {
+      // Create cache key from params
+      const cacheKey = `products:${JSON.stringify(params || {})}`;
+      
+      // Check cache first
+      const cached = apiCache.get<{ products: Product[]; pagination?: Pagination }>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
       const response = await axiosInstance.get<ProductsResponse>("/api/products", { params });
-      return {
+      const result = {
         products: (response as any)?.data || [],
         pagination: (response as any)?.pagination
       };
+
+      // Cache the result (5 minutes for product list)
+      apiCache.set(cacheKey, result, 5 * 60 * 1000);
+
+      return result;
     } catch (error: any) {
       console.error("Error fetching products:", error);
       throw error;
@@ -54,8 +69,23 @@ export const productsService = {
   // Lấy chi tiết sản phẩm theo ID
   getProductById: async (id: string): Promise<Product | null> => {
     try {
+      const cacheKey = `product:${id}`;
+      
+      // Check cache first
+      const cached = apiCache.get<Product>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
       const response = await axiosInstance.get<ProductResponse>(`/api/products/${id}`);
-      return (response as any)?.product || null;
+      const product = (response as any)?.product || null;
+
+      // Cache the result (10 minutes for product detail)
+      if (product) {
+        apiCache.set(cacheKey, product, 10 * 60 * 1000);
+      }
+
+      return product;
     } catch (error: any) {
       console.error(`Error fetching product ${id}:`, error);
       throw error;

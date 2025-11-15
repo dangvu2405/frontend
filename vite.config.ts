@@ -37,5 +37,16 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 600,
+    // Enable minification and compression
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.log in production
+        drop_debugger: true,
+      },
+    },
+    // Optimize chunk size
+    target: 'es2015',
+    cssCodeSplit: true,
   },
 })

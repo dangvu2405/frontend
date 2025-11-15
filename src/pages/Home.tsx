@@ -185,9 +185,15 @@ export default function HomePage() {
                     loop
                     muted
                     playsInline
-                    preload="metadata"
+                    preload="none"
                     poster="https://placehold.co/800x600/151515/ffffff?text=Perfume+Shop"
                     className="w-full h-full object-cover will-change-transform"
+                    onLoadedData={(e) => {
+                      // Video loaded, can start playing
+                      (e.target as HTMLVideoElement).play().catch(() => {
+                        // Auto-play failed, user interaction required
+                      });
+                    }}
                   >
                     <source src="/backgroud.mp4" type="video/mp4" />
                   </video>
