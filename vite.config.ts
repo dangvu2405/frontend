@@ -24,28 +24,30 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks - use object format to avoid circular dependencies
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': [
-            '@radix-ui/react-alert-dialog',
-            '@radix-ui/react-avatar',
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-select',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-checkbox',
-            '@radix-ui/react-label',
-            '@radix-ui/react-separator',
-            '@radix-ui/react-slot',
-            '@radix-ui/react-toggle',
-            '@radix-ui/react-toggle-group',
-            '@radix-ui/react-tooltip',
-          ],
-          'chart-vendor': ['recharts'],
-          'admin-vendor': ['@tanstack/react-table', '@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/modifiers', '@dnd-kit/utilities'],
-          'network-vendor': ['axios', 'socket.io-client'],
-          'utils-vendor': ['date-fns', 'zod', 'clsx', 'tailwind-merge', 'class-variance-authority'],
+        // Simplified chunking to avoid circular dependencies
+        manualChunks: (id) => {
+          // Only split node_modules, let Rollup handle the rest automatically
+          if (id.includes('node_modules')) {
+            // React core - must be separate
+            if (id.includes('react') && !id.includes('react-dom')) {
+              return 'react';
+            }
+            if (id.includes('react-dom')) {
+              return 'react-dom';
+            }
+            if (id.includes('react-router')) {
+              return 'react-router';
+            }
+            // Large libraries that should be separate
+            if (id.includes('recharts')) {
+              return 'recharts';
+            }
+            if (id.includes('@tanstack/react-table')) {
+              return 'react-table';
+            }
+            // Everything else in node_modules goes to vendor
+            return 'vendor';
+          }
         },
         // Optimize chunk file names
         chunkFileNames: 'assets/js/[name]-[hash].js',
@@ -61,5 +63,10 @@ export default defineConfig({
     cssCodeSplit: true,
     // Reduce asset inline limit to force separate files
     assetsInlineLimit: 4096, // 4KB - smaller images will be inlined
+    // CommonJS options to handle circular dependencies better
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
   },
 })
