@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: frontend-app
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npx serve -s dist -l 10000
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        value: https://api.dtv2405.id.vn
+    staticPublishPath: ./dist
+    domains:
+      - dtv2405.id.vn
+      - www.dtv2405.id.vn
+
