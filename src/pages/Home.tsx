@@ -56,8 +56,8 @@ const getCloudinaryImageUrl = (imageName: string): string => {
     
     // Kiểm tra xem đã có prefix 'products/' chưa
     // Nếu chưa có, thêm prefix 'products/'
-    if (!cleanImageName.startsWith('products/')) {
-      cleanImageName = `products/${cleanImageName}`;
+    if (!cleanImageName.startsWith('f_auto,q_auto/products/')) {
+      cleanImageName = `f_auto,q_auto/products/${cleanImageName}`;
     }
     
     // Ghép với base URL: https://res.cloudinary.com/dbiabh88k/image/upload/products/ZmfIxdkQ0gc
@@ -68,9 +68,6 @@ const getCloudinaryImageUrl = (imageName: string): string => {
   return imageName || '';
 };
 
-// Helper function để lấy URL video từ Cloudinary
-// Database trả về: background.mp4 hoặc videos/background.mp4
-// Cloudinary Public ID: videos/backgroud (lưu ý: tên đúng là "backgroud" không phải "background")
 // URL với version: https://res.cloudinary.com/dbiabh88k/video/upload/v1763184665/videos/backgroud.mp4
 const getCloudinaryVideoUrl = (videoName: string, version?: string): string => {
   // Nếu đã là full URL, trả về trực tiếp
