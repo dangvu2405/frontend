@@ -56,8 +56,8 @@ const getCloudinaryImageUrl = (imageName: string): string => {
     
     // Kiểm tra xem đã có prefix 'products/' chưa
     // Nếu chưa có, thêm prefix 'products/'
-    if (!cleanImageName.startsWith('f_auto,q_auto/products/')) {
-      cleanImageName = `f_auto,q_auto/products/${cleanImageName}`;
+    if (!cleanImageName.startsWith('/w_500,h_500,c_fill,f_auto,q_20/products/')) {
+      cleanImageName = `/w_500,h_500,c_fill,f_auto,q_20/products/${cleanImageName}`;
     }
     
     // Ghép với base URL: https://res.cloudinary.com/dbiabh88k/image/upload/products/ZmfIxdkQ0gc
