@@ -3,8 +3,24 @@
  * Supports both local images and Cloudinary CDN
  */
 
+// Parse Cloudinary connection string và lấy cloud name
+const parseCloudinaryConnectionString = (connectionString: string): string => {
+  // Format: icloudinary://{api_key}:{api_secret}@{cloud_name}
+  const match = connectionString.match(/@([^@]+)$/);
+  if (match && match[1]) {
+    return match[1];
+  }
+  return '';
+};
+
 // Cloudinary Configuration
-const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '';
+// Ưu tiên: VITE_CLOUDINARY_CLOUD_NAME > parse từ VITE_CLOUDINARY_URL > empty
+const cloudinaryConnectionString = import.meta.env.VITE_CLOUDINARY_URL || '';
+const CLOUDINARY_CLOUD_NAME = 
+  import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 
+  (cloudinaryConnectionString ? parseCloudinaryConnectionString(cloudinaryConnectionString) : '') ||
+  '';
+
 const CLOUDINARY_BASE_URL = CLOUDINARY_CLOUD_NAME 
   ? `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload`
   : '';
@@ -133,9 +149,41 @@ export const getThumbnailUrl = (imagePath: string | undefined | null): string =>
 };
 
 /**
- * Get optimized product image URL (medium size for product cards)
+ * Get simple Cloudinary URL without transformations (for testing)
+ * Use this when images return 404 with transformations
  */
-export const getProductImageUrl = (imagePath: string | undefined | null): string => {
+export const getSimpleCloudinaryUrl = (imageName: string | undefined | null): string => {
+  if (!imageName) {
+    return 'https://placehold.co/300x300/E5E5EA/000?text=No+Image';
+  }
+  
+  // If already a full URL, return as is
+  if (imageName.startsWith('http://') || imageName.startsWith('https://')) {
+    return imageName;
+  }
+  
+  // If Cloudinary is configured, build simple URL
+  if (CLOUDINARY_BASE_URL) {
+    const cleanImageName = imageName.startsWith('/') ? imageName.slice(1) : imageName;
+    return `${CLOUDINARY_BASE_URL}/${cleanImageName}`;
+  }
+  
+  return 'https://placehold.co/300x300/E5E5EA/000?text=No+Image';
+};
+
+/**
+ * Get optimized product image URL (medium size for product cards)
+ * Set useSimpleUrl=true to use simple URL without transformations (for debugging 404 errors)
+ */
+export const getProductImageUrl = (
+  imagePath: string | undefined | null, 
+  useSimpleUrl: boolean = false
+): string => {
+  // Use simple URL if requested (for debugging 404 errors)
+  if (useSimpleUrl) {
+    return getSimpleCloudinaryUrl(imagePath);
+  }
+  
   return getImageUrl(imagePath, {
     width: 600,
     height: 600,

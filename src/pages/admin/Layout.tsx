@@ -10,6 +10,7 @@ const TITLES: Record<string, string> = {
   "/admin/products": "Quản lý sản phẩm",
   "/admin/customers": "Quản lý khách hàng",
   "/admin/accounts": "Quản lý tài khoản",
+  "/admin/reviews": "Quản lý đánh giá",
   "/admin/supply-chain": "Chuỗi cung ứng Blockchain",
   "/admin/chat": "Quản lý Chat",
   "/admin/settings": "Cài đặt hệ thống",

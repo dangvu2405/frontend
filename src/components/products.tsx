@@ -60,7 +60,7 @@ const ProductCard = memo(({
       <CardContent className="p-0">
         <div className="relative aspect-square overflow-hidden bg-muted">
           <img
-            src={getProductImageUrl(product.hinhAnhChinh || product.hinhAnh) || FALLBACK_IMAGE}
+            src={getProductImageUrl(product.hinhAnhChinh || product.hinhAnh, true) || FALLBACK_IMAGE}
             alt={product.tenSP}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"

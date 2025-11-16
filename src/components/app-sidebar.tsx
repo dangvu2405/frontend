@@ -17,6 +17,7 @@ import {
   IconUsers,
   IconLink,
   IconMail,
+  IconStar,
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -60,6 +61,11 @@ const sidebarData = {
       title: "Quản lý tài khoản",
       url: "/admin/accounts",
       icon: IconUsers,
+    },
+    {
+      title: "Quản lý đánh giá",
+      url: "/admin/reviews",
+      icon: IconStar,
     },
     {
       title: "Chuỗi cung ứng Blockchain",

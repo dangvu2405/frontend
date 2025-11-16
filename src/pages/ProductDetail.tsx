@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { productsService, type Product } from '@/services/productsService';
 import { storage, type CartItem } from '@/utils/storage';
+import { reviewService, type RatingStats } from '@/services/reviewService';
 import { toast } from 'sonner';
 import { 
   ShoppingCart, 
@@ -21,6 +22,60 @@ import { ProductReviews } from '@/components/ProductReviews';
 
 const FALLBACK_IMAGE = 'https://placehold.co/600x600/E5E5EA/000?text=No+Image';
 
+// Parse Cloudinary connection string và tạo base URL
+const parseCloudinaryUrl = (connectionString: string): string => {
+  // Format: icloudinary://{api_key}:{api_secret}@{cloud_name}
+  const match = connectionString.match(/@([^@]+)$/);
+  if (match && match[1]) {
+    const cloudName = match[1];
+    return `https://res.cloudinary.com/${cloudName}/image/upload`;
+  }
+  return '';
+};
+
+// Lấy Cloudinary URL từ connection string hoặc env
+const cloudinaryConnectionString = import.meta.env.VITE_CLOUDINARY_URL || 'icloudinary://686864971786299:e2HY_MPTM8XR4vlUDKqmVySC3Rk@dbiabh88k';
+const imageUrl = cloudinaryConnectionString.startsWith('https://')
+  ? cloudinaryConnectionString
+  : parseCloudinaryUrl(cloudinaryConnectionString);
+
+// Helper function để lấy URL ảnh từ Cloudinary
+// Database trả về: ZmfIxdkQ0gc.jpg
+// Cloudinary Public ID: products/ZmfIxdkQ0gc
+// URL: https://res.cloudinary.com/dbiabh88k/image/upload/products/ZmfIxdkQ0gc
+const getCloudinaryImageUrl = (imageName: string): string => {
+  // Nếu đã là full URL, trả về trực tiếp
+  if (imageName && (imageName.startsWith('http://') || imageName.startsWith('https://'))) {
+    return imageName;
+  }
+  
+  // Luôn ghép base URL với tên ảnh từ database
+  if (imageUrl) {
+    if (!imageName) {
+      // Nếu không có tên ảnh, vẫn trả về base URL
+      return imageUrl;
+    }
+    
+    // Loại bỏ leading slash nếu có
+    let cleanImageName = imageName.startsWith('/') ? imageName.slice(1) : imageName;
+    
+    // Loại bỏ extension (.jpg, .png, etc.) vì Cloudinary Public ID không cần extension
+    cleanImageName = cleanImageName.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '');
+    
+    // Kiểm tra xem đã có prefix 'products/' chưa
+    // Nếu chưa có, thêm prefix 'products/'
+    if (!cleanImageName.startsWith('products/')) {
+      cleanImageName = `products/${cleanImageName}`;
+    }
+    
+    // Ghép với base URL: https://res.cloudinary.com/dbiabh88k/image/upload/products/ZmfIxdkQ0gc
+    return `${imageUrl}/${cleanImageName}`;
+  }
+  
+  // Nếu không có imageUrl, trả về tên ảnh gốc (fallback)
+  return imageName || '';
+};
+
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -30,6 +85,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [ratingStats, setRatingStats] = useState<RatingStats | null>(null);
 
   // Fetch product detail
   useEffect(() => {
@@ -62,14 +118,12 @@ export default function ProductDetailPage() {
           discountPercent = Math.round(((Number(raw.Gia) - Number(raw.GiaKhuyenMai)) / Number(raw.Gia)) * 100);
         }
 
-        const hinhAnhChinh = raw.HinhAnhChinh 
-          ? (raw.HinhAnhChinh.startsWith('http') ? raw.HinhAnhChinh : `/${raw.HinhAnhChinh}`)
-          : FALLBACK_IMAGE;
+        // Hình ảnh chính - lấy từ Cloudinary dựa trên tên ảnh trong database
+        const hinhAnhChinh = getCloudinaryImageUrl(raw.HinhAnhChinh) || FALLBACK_IMAGE;
         
+        // Hình ảnh phụ - lấy từ Cloudinary dựa trên tên ảnh trong database
         const hinhAnhPhu = Array.isArray(raw.HinhAnhPhu) 
-          ? raw.HinhAnhPhu.map((img: string) => 
-              img.startsWith('http') ? img : `/${img}`
-            )
+          ? raw.HinhAnhPhu.map((img: string) => getCloudinaryImageUrl(img))
           : [];
 
         const normalized: Product = {
@@ -89,6 +143,17 @@ export default function ProductDetailPage() {
         setProduct(normalized);
         setSelectedImage(0); // Reset về ảnh đầu tiên khi load sản phẩm mới
 
+        // Fetch rating stats từ reviews
+        try {
+          const stats = await reviewService.getProductRatingStats(id);
+          if (isMounted) {
+            setRatingStats(stats);
+          }
+        } catch (statsError) {
+          // Nếu không lấy được stats, để null (sẽ hiển thị mặc định)
+          console.warn('Could not fetch rating stats:', statsError);
+        }
+
         // Fetch related products (same category) - chỉ fetch theo category thay vì tất cả products
         try {
           const categoryProducts = await productsService.getProductsByCategory(normalized.loaiSP);
@@ -99,14 +164,12 @@ export default function ProductDetailPage() {
             })
             .slice(0, 4)
             .map((raw: any) => {
-            const hinhAnhChinh = raw.HinhAnhChinh 
-              ? (raw.HinhAnhChinh.startsWith('http') ? raw.HinhAnhChinh : `/${raw.HinhAnhChinh}`)
-              : FALLBACK_IMAGE;
+            // Hình ảnh chính - lấy từ Cloudinary dựa trên tên ảnh trong database
+            const hinhAnhChinh = getCloudinaryImageUrl(raw.HinhAnhChinh) || FALLBACK_IMAGE;
             
+            // Hình ảnh phụ - lấy từ Cloudinary dựa trên tên ảnh trong database
             const hinhAnhPhu = Array.isArray(raw.HinhAnhPhu) 
-              ? raw.HinhAnhPhu.map((img: string) => 
-                  img.startsWith('http') ? img : `/${img}`
-                )
+              ? raw.HinhAnhPhu.map((img: string) => getCloudinaryImageUrl(img))
               : [];
 
             return {
@@ -324,11 +387,27 @@ export default function ProductDetailPage() {
               <div className="flex items-center gap-6 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="flex">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <span key={star} className="text-yellow-500">★</span>
-                    ))}
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const avgRating = ratingStats?.avgRating || 0;
+                      const filled = star <= Math.round(avgRating);
+                      return (
+                        <span 
+                          key={star} 
+                          className={filled ? 'text-yellow-500' : 'text-gray-300'}
+                        >
+                          ★
+                        </span>
+                      );
+                    })}
                   </div>
-                  <span className="text-muted-foreground">(128 đánh giá)</span>
+                  <span className="text-muted-foreground">
+                    ({ratingStats?.totalReviews || 0} đánh giá)
+                    {ratingStats && ratingStats.avgRating > 0 && (
+                      <span className="ml-1 font-semibold text-foreground">
+                        {ratingStats.avgRating.toFixed(1)}/5
+                      </span>
+                    )}
+                  </span>
                 </div>
                 <div className="h-4 w-px bg-border" />
                 <span className="text-muted-foreground">

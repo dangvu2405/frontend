@@ -30,6 +30,60 @@ const ProductsGrid = lazy(async () => {
   return { default: module.ProductsGrid };
 });
 
+// Parse Cloudinary connection string và tạo base URL
+const parseCloudinaryUrl = (connectionString: string): string => {
+  // Format: icloudinary://{api_key}:{api_secret}@{cloud_name}
+  const match = connectionString.match(/@([^@]+)$/);
+  if (match && match[1]) {
+    const cloudName = match[1];
+    return `https://res.cloudinary.com/${cloudName}/image/upload`;
+  }
+  return '';
+};
+
+// Lấy Cloudinary URL từ connection string hoặc env
+const cloudinaryConnectionString = import.meta.env.VITE_CLOUDINARY_URL || 'icloudinary://686864971786299:e2HY_MPTM8XR4vlUDKqmVySC3Rk@dbiabh88k';
+const imageUrl = cloudinaryConnectionString.startsWith('https://')
+  ? cloudinaryConnectionString
+  : parseCloudinaryUrl(cloudinaryConnectionString);
+
+// Helper function để lấy URL ảnh từ Cloudinary
+// Database trả về: ZmfIxdkQ0gc.jpg
+// Cloudinary Public ID: products/ZmfIxdkQ0gc
+// URL: https://res.cloudinary.com/dbiabh88k/image/upload/products/ZmfIxdkQ0gc
+const getCloudinaryImageUrl = (imageName: string): string => {
+  // Nếu đã là full URL, trả về trực tiếp
+  if (imageName && (imageName.startsWith('http://') || imageName.startsWith('https://'))) {
+    return imageName;
+  }
+  
+  // Luôn ghép base URL với tên ảnh từ database
+  if (imageUrl) {
+    if (!imageName) {
+      // Nếu không có tên ảnh, vẫn trả về base URL
+      return imageUrl;
+    }
+    
+    // Loại bỏ leading slash nếu có
+    let cleanImageName = imageName.startsWith('/') ? imageName.slice(1) : imageName;
+    
+    // Loại bỏ extension (.jpg, .png, etc.) vì Cloudinary Public ID không cần extension
+    cleanImageName = cleanImageName.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '');
+    
+    // Kiểm tra xem đã có prefix 'products/' chưa
+    // Nếu chưa có, thêm prefix 'products/'
+    if (!cleanImageName.startsWith('products/')) {
+      cleanImageName = `products/${cleanImageName}`;
+    }
+    
+    // Ghép với base URL: https://res.cloudinary.com/dbiabh88k/image/upload/products/ZmfIxdkQ0gc
+    return `${imageUrl}/${cleanImageName}`;
+  }
+  
+  // Nếu không có imageUrl, trả về tên ảnh gốc (fallback)
+  return imageName || '';
+};
+
 type Category = {
   _id: string;
   TenLoaiSanPham: string;
@@ -106,14 +160,12 @@ export default function ProductsPage() {
             discountPercent = Math.round(((Number(raw.Gia) - Number(raw.GiaKhuyenMai)) / Number(raw.Gia)) * 100);
           }
 
-          const hinhAnhChinh = raw.HinhAnhChinh 
-            ? (raw.HinhAnhChinh.startsWith('http') ? raw.HinhAnhChinh : `/${raw.HinhAnhChinh}`)
-            : 'https://placehold.co/300x300/E5E5EA/000?text=No+Image';
+          // Hình ảnh chính - lấy từ Cloudinary dựa trên tên ảnh trong database
+          const hinhAnhChinh = getCloudinaryImageUrl(raw.HinhAnhChinh);
           
+          // Hình ảnh phụ - lấy từ Cloudinary dựa trên tên ảnh trong database
           const hinhAnhPhu = Array.isArray(raw.HinhAnhPhu) 
-            ? raw.HinhAnhPhu.map((img: string) => 
-                img.startsWith('http') ? img : `/${img}`
-              )
+            ? raw.HinhAnhPhu.map((img: string) => getCloudinaryImageUrl(img))
             : [];
 
           return {

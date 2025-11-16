@@ -193,6 +193,29 @@ const adminService = {
 
   getTopCustomersByOrders: (params?: { limit?: number }) =>
     axiosInstance.get('/admin/stats/top-customers', { params }),
+
+  // ==========================
+  // REVIEWS (ĐÁNH GIÁ)
+  // ==========================
+  getReviews: (params?: {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+    productId?: string;
+    customerId?: string;
+    minRating?: number;
+    maxRating?: number;
+  }) => axiosInstance.get('/admin/reviews', { params }),
+
+  getReviewById: (id: string) => axiosInstance.get(`/admin/reviews/${id}`),
+
+  deleteReview: (id: string) => axiosInstance.delete(`/admin/reviews/${id}`),
+
+  deleteMultipleReviews: (reviewIds: string[]) =>
+    axiosInstance.delete('/admin/reviews', { data: { reviewIds } }),
+
+  getReviewStats: () => axiosInstance.get('/admin/reviews/stats'),
 };
 
 export default adminService;

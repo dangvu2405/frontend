@@ -6,11 +6,110 @@ import { lazy, Suspense, useState, useEffect, useCallback } from 'react';
 import { productsService, type Product } from '@/services/productsService';
 import { toast } from 'sonner';
 import { storage, type CartItem } from '@/utils/storage';
-import { getVideoUrl } from '@/utils/imageUtils';
 const ProductsGrid = lazy(async () => {
   const module = await import('@/components/products');
   return { default: module.ProductsGrid };
 });
+
+// Parse Cloudinary connection string và lấy cloud name
+const parseCloudinaryConnectionString = (connectionString: string): string => {
+  // Format: icloudinary://{api_key}:{api_secret}@{cloud_name}
+  const match = connectionString.match(/@([^@]+)$/);
+  if (match && match[1]) {
+    return match[1];
+  }
+  return '';
+};
+
+// Lấy Cloudinary cloud name từ connection string hoặc env
+const cloudinaryConnectionString = import.meta.env.VITE_CLOUDINARY_URL || 'icloudinary://686864971786299:e2HY_MPTM8XR4vlUDKqmVySC3Rk@dbiabh88k';
+const cloudName = cloudinaryConnectionString.startsWith('https://')
+  ? cloudinaryConnectionString.replace('https://res.cloudinary.com/', '').split('/')[0]
+  : parseCloudinaryConnectionString(cloudinaryConnectionString);
+
+// Base URLs cho image và video
+const imageUrl = cloudName ? `https://res.cloudinary.com/${cloudName}/image/upload` : '';
+const videoUrl = cloudName ? `https://res.cloudinary.com/${cloudName}/video/upload` : '';
+
+// Helper function để lấy URL ảnh từ Cloudinary
+// Database trả về: ZmfIxdkQ0gc.jpg
+// Cloudinary Public ID: products/ZmfIxdkQ0gc
+// URL: https://res.cloudinary.com/dbiabh88k/image/upload/products/ZmfIxdkQ0gc
+const getCloudinaryImageUrl = (imageName: string): string => {
+  // Nếu đã là full URL, trả về trực tiếp
+  if (imageName && (imageName.startsWith('http://') || imageName.startsWith('https://'))) {
+    return imageName;
+  }
+  
+  // Luôn ghép base URL với tên ảnh từ database
+  if (imageUrl) {
+    if (!imageName) {
+      // Nếu không có tên ảnh, vẫn trả về base URL
+      return imageUrl;
+    }
+    
+    // Loại bỏ leading slash nếu có
+    let cleanImageName = imageName.startsWith('/') ? imageName.slice(1) : imageName;
+    
+    // Loại bỏ extension (.jpg, .png, etc.) vì Cloudinary Public ID không cần extension
+    cleanImageName = cleanImageName.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '');
+    
+    // Kiểm tra xem đã có prefix 'products/' chưa
+    // Nếu chưa có, thêm prefix 'products/'
+    if (!cleanImageName.startsWith('products/')) {
+      cleanImageName = `products/${cleanImageName}`;
+    }
+    
+    // Ghép với base URL: https://res.cloudinary.com/dbiabh88k/image/upload/products/ZmfIxdkQ0gc
+    return `${imageUrl}/${cleanImageName}`;
+  }
+  
+  // Nếu không có imageUrl, trả về tên ảnh gốc (fallback)
+  return imageName || '';
+};
+
+// Helper function để lấy URL video từ Cloudinary
+// Database trả về: background.mp4 hoặc videos/background.mp4
+// Cloudinary Public ID: videos/backgroud (lưu ý: tên đúng là "backgroud" không phải "background")
+// URL với version: https://res.cloudinary.com/dbiabh88k/video/upload/v1763184665/videos/backgroud.mp4
+const getCloudinaryVideoUrl = (videoName: string, version?: string): string => {
+  // Nếu đã là full URL, trả về trực tiếp
+  if (videoName && (videoName.startsWith('http://') || videoName.startsWith('https://'))) {
+    return videoName;
+  }
+  
+  // Luôn ghép base URL với tên video từ database
+  if (videoUrl) {
+    if (!videoName) {
+      // Nếu không có tên video, vẫn trả về base URL
+      return videoUrl;
+    }
+    
+    // Loại bỏ leading slash nếu có
+    let cleanVideoName = videoName.startsWith('/') ? videoName.slice(1) : videoName;
+    
+    // Loại bỏ extension (.mp4, .webm, etc.) vì Cloudinary Public ID không cần extension
+    cleanVideoName = cleanVideoName.replace(/\.(mp4|webm|mov|avi)$/i, '');
+    
+    // Kiểm tra xem đã có prefix 'videos/' chưa
+    // Nếu chưa có, thêm prefix 'videos/'
+    if (!cleanVideoName.startsWith('videos/')) {
+      cleanVideoName = `videos/${cleanVideoName}`;
+    }
+    
+    // Nếu có version, thêm vào URL
+    // Format: https://res.cloudinary.com/dbiabh88k/video/upload/v{version}/videos/backgroud
+    if (version) {
+      return `${videoUrl}/v${version}/${cleanVideoName}`;
+    }
+    
+    // Ghép với base URL: https://res.cloudinary.com/dbiabh88k/video/upload/videos/backgroud
+    return `${videoUrl}/${cleanVideoName}`;
+  }
+  
+  // Nếu không có videoUrl, trả về tên video gốc (fallback)
+  return videoName || '';
+};
 
 const FEATURE_CARDS = [
   {
@@ -101,22 +200,16 @@ export default function HomePage() {
             // Đã bán
             daBan: Number(p.DaBan || 0),
             
-            // Hình ảnh chính
-            hinhAnhChinh: p.HinhAnhChinh 
-              ? (p.HinhAnhChinh.startsWith('http') ? p.HinhAnhChinh : `/${p.HinhAnhChinh}`)
-              : 'https://placehold.co/300x300/E5E5EA/000?text=No+Image',
+            // Hình ảnh chính - lấy từ Cloudinary dựa trên tên ảnh trong database
+            hinhAnhChinh: getCloudinaryImageUrl(p.HinhAnhChinh),
             
-            // Hình ảnh phụ
+            // Hình ảnh phụ - lấy từ Cloudinary dựa trên tên ảnh trong database
             hinhAnhPhu: Array.isArray(p.HinhAnhPhu) 
-              ? p.HinhAnhPhu.map((img: string) => 
-                  img.startsWith('http') ? img : `/${img}`
-                )
+              ? p.HinhAnhPhu.map((img: string) => getCloudinaryImageUrl(img))
               : [],
             
             // Deprecated: giữ lại để tương thích
-            hinhAnh: p.HinhAnhChinh 
-              ? (p.HinhAnhChinh.startsWith('http') ? p.HinhAnhChinh : `/${p.HinhAnhChinh}`)
-              : 'https://placehold.co/300x300/E5E5EA/000?text=No+Image',
+            hinhAnh: getCloudinaryImageUrl(p.HinhAnhChinh),
             
             // Loại sản phẩm
             loaiSP: p.MaLoaiSanPham?.TenLoaiSanPham || 'Nước hoa',
@@ -190,7 +283,7 @@ export default function HomePage() {
                       });
                     }}
                   >
-                    <source src={getVideoUrl('videos/backgroud')} type="video/mp4" />
+                    <source src={getCloudinaryVideoUrl('backgroud', '1763184665')} type="video/mp4" />
                   </video>
                 ) : (
                   <div className="w-full h-full bg-muted animate-pulse" />
