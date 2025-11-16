@@ -606,12 +606,16 @@ export default function AdminReviewsPage() {
                               <div className="font-medium">
                                 {getProductName(review.IdSanPham)}
                               </div>
-                              {typeof review.IdSanPham !== "string" &&
-                                review.IdSanPham.Gia && (
-                                  <div className="text-xs text-muted-foreground">
-                                    {currencyFormatter.format(review.IdSanPham.Gia)}
-                                  </div>
-                                )}
+                              {(() => {
+                                const product = review.IdSanPham;
+                                return product &&
+                                  typeof product !== "string" &&
+                                  product.Gia !== undefined ? (
+                                    <div className="text-xs text-muted-foreground">
+                                      {currencyFormatter.format(product.Gia)}
+                                    </div>
+                                  ) : null;
+                              })()}
                             </div>
                           </div>
                         </td>
@@ -745,12 +749,16 @@ export default function AdminReviewsPage() {
                       <div className="font-medium">
                         {getProductName(viewingReview.IdSanPham)}
                       </div>
-                      {typeof viewingReview.IdSanPham !== "string" &&
-                        viewingReview.IdSanPham.Gia && (
-                          <div className="text-sm text-muted-foreground">
-                            {currencyFormatter.format(viewingReview.IdSanPham.Gia)}
-                          </div>
-                        )}
+                      {(() => {
+                        const product = viewingReview.IdSanPham;
+                        return product &&
+                          typeof product !== "string" &&
+                          product.Gia !== undefined ? (
+                            <div className="text-sm text-muted-foreground">
+                              {currencyFormatter.format(product.Gia)}
+                            </div>
+                          ) : null;
+                      })()}
                     </div>
                   </div>
                 </div>
